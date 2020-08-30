@@ -1,0 +1,157 @@
+import math
+
+class Node:
+
+    def __init__(self,key):
+        self.key = key
+        self.mark = False
+        self.parent = None
+        self.degree = 0
+        self.child = None
+        self.left = self
+        self.right = self
+    
+    def add_child(self,child):
+        if self.child == None:
+            child.left = child
+            child.right = child
+            
+        else:
+            child.left = self.child.left
+            child.right = self.child
+            
+            self.child.left.right = child
+            self.child.left = child
+            
+        self.child = child
+        self.degree+=1
+
+    def update_key(self,new_key):
+        self.key = new_key
+        
+class fibonacci_heap:
+    def __init__(self):
+        self.root_list = None
+        self.min = None
+        self.n_nodes = 0
+        
+    
+    def insert(self,new_node):
+        
+        if self.root_list == None:
+            self.root_list = new_node
+            self.set_min(new_node)
+        else:
+            left_of_min = self.get_min().left
+            right_of_min = self.get_min().right
+            
+            new_node.left = left_of_min
+            new_node.right = right_of_min
+            
+            left_of_min.right = new_node
+            right_of_min.left = new_node
+            
+            if new_node.key < self.get_min().key:
+                self.set_min(new_node)
+        
+        self.n_nodes+=1
+                
+    def get_min(self):
+        return self.min
+    
+    def set_min(self,new_min):
+        self.min = new_min
+    
+    def extract_min(self):
+        min_node = self.get_min()
+        left_of_min = min_node.left
+        right_of_min = min_node.right
+        
+        # When the min value has no child
+        if min_node.child == None:
+            left_of_min.right = right_of_min
+            right_of_min.left = left_of_min
+        else:
+            #Obtain the sub heap
+            first_child_of_min = min_node.child
+            last_child_of_min = first_child_of_min.left
+            
+            left_of_min.right = first_child_of_min
+            first_child_of_min.left = left_of_min
+            
+            right_of_min.left = last_child_of_min
+            last_child_of_min.right = right_of_min
+        
+        self.consolidate()
+        
+        self.n_nodes -=1
+            
+        return min_node.key
+    
+    def get_n_nodes(self):
+        return self.n_nodes
+    
+    def conoslidate(self):
+        aux_array = [None]*int(math.log2(self.n_nodes))+1
+        current = self.get_min().right
+        end = current.left
+        
+        while current != end:
+            
+            existing=aux_array[current.degree]
+            
+            if existing == None:
+                aux_array[current.degree] = current
+                current = current.right
+            else:
+                left_of_existing = existing.left
+                right_of_existing = existing.right
+                
+                left_of_existing.right = right_of_existing
+                right_of_existing.left = left_of_existing
+                
+                current.add_child(existing)
+                
+            if current.key < self.get_min().key:
+                self.set_min(current)
+    
+    def decrease_key(self,target_node,new_key):
+        target_node.update_key(new_key)
+        self.markings(target_node)
+        
+        
+    
+    def markings(self,target_node):
+        target_node.mark = False
+        if target_node.parent == None:
+            return
+        else:
+            if target_node.parent.key > target_node.key:
+                
+                min_node = self.get_min()
+                
+                
+                #update linked list of the child
+                if target_node.parent.degree != 1:
+                    left_of_target_node = target_node.left
+                    right_of_target_node = target_node.right
+                    
+                    left_of_target_node.right = target_node.right
+                    right_of_target_node.right.left = target_node.left
+                    target_node.parent.child = right_of_target_node
+                else:
+                    target_node.parent.child = None
+                    
+                # Add the targetnode into the root    
+                target_node.left = min_node.left
+                target_node.right = min_node    
+                min_node.left.right = target_node
+                min_node.left = target_node
+                
+                if target_node.parent.mark == True:
+                    self.markings(target_node.parent)             
+                else:
+                    target_node.parent.mark = True
+                    return
+            else:
+                return
