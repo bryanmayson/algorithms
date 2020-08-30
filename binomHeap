@@ -1,0 +1,73 @@
+import math
+
+class Node:
+    def __init__(self,key,parent,child,sibling,degree):
+        self.key = key
+        self.parent = parent
+        self.child = child
+        self.sibling = sibling
+        self.degree = degree
+        
+class Heap:
+    def __init__(self):
+        self.head = None
+        
+
+def make_binomial_heap():
+    return Heap()
+
+def minimum_binomial_heap(heap):
+    y= None
+    x = heap.head
+    minimum = math.inf
+    while x != None:
+        if x.key < minimum:
+            minimum = x.key
+            y = x
+        x = x.sibling
+    return y
+
+def link(y,z):
+    """
+        Setting z to be a parent of y
+    """
+    y.parent = z
+    y.sibling = z.child
+    z.child = y
+    z.degree = z.degree + 1
+
+def merge_phase1(a,b):
+    x = a.head
+    y = b.head
+    while y != None:
+        temp = x.child
+        x.child = y
+        y = y.child
+        x.child.child =temp
+        x = temp    
+        
+def merge_heap(a,b):
+    h = make_binomial_heap()
+    h.head = merge_phase1(a,b)
+    if h.head == None:
+        return h
+    prev_x = None
+    x = h.head
+    next_x = x.sibling
+    while next_x != None:
+        if (x.degree != next_x.degree) or ((next_x.sibling != None) and (next_x.sibling.degree == x.degree)):
+            prev_x = x
+            x = next_x
+        elif x.key <= next_x.key:
+            x.sibling = next_x.sibling
+            link(next_x,x)
+        else:
+            if prev_x == None:
+                h.head = next_x
+            else:
+                prev_x.sibling = next_x
+            link(x,next_x)
+            x= next_x
+        next_x = x.sibling
+        
+    return h
